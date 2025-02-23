@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "author": "Test",
+    "timestamp": "2024-02-22T12:00:00Z"
+  },
+  "workflow": {
+    "executionStrategy": "SEQUENTIAL",
+    "nodes": [
+      {
+        "id": "node1",
+        "type": "InvalidNodeType",
+        "config": {}
+      }
+    ]
+  }
+}

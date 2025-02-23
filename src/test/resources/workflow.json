@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "author": "Test User",
+    "timestamp": "2025-02-22T15:30:00Z"
+  },
+  "workflow": {
+    "executionStrategy": "SEQUENTIAL",
+    "nodes": [
+      {
+        "id": "node1",
+        "type": "WorkerTypeA",
+        "config": {
+          "timeout": 5000,
+          "failOnError": false
+        }
+      },
+      {
+        "id": "node2",
+        "type": "WorkerTypeA",
+        "config": {
+          "timeout": 5000,
+          "failOnError": false
+        }
+      }
+    ]
+  }
+}
