@@ -28,14 +28,26 @@ public class WorkflowManager {
     }
 
     public void updateWorkflow(WorkflowOutputData outputData) {
+        if (outputData == null) {
+            throw new IllegalArgumentException("WorkflowOutputData cannot be null.");
+        }
+
         lock.lock();
         try {
             // Convert outputData to a JsonNode
             JsonNode jsonOutput = objectMapper.valueToTree(outputData);
+
+            // Validate that "status" and "data" exist and are non-null
+            if (!jsonOutput.has("status") || jsonOutput.get("status").isNull() ||
+                    !jsonOutput.has("data") || jsonOutput.get("data").isNull()) {
+                throw new IllegalArgumentException("Invalid WorkflowOutputData: 'status' and 'data' fields are required.");
+            }
+
             // Remove the "nodeId" property if it exists
             if (jsonOutput.has("nodeId") && jsonOutput instanceof ObjectNode) {
                 ((ObjectNode) jsonOutput).remove("nodeId");
             }
+
             // Update the node's output in the workflow
             workflow.getWorkflow().getNodes().stream()
                     .filter(node -> node.getId().equals(outputData.getNodeId()))

@@ -1,7 +1,5 @@
-package com.example.workflow;
+package com.example.workflow.engine;
 
-import com.example.workflow.engine.WorkflowEngine;
-import com.example.workflow.engine.WorkflowManagerFactory;
 import com.example.workflow.model.Workflow;
 import com.example.workflow.nodes.NodeRegistry;
 import com.example.workflow.nodes.WorkerTypeA;

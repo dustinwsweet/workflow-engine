@@ -23,7 +23,7 @@ public class WorkerTypeA extends BaseWorkflowNode {
                     return new WorkflowOutputData(WorkflowOutputData.Status.FAIL,
                             JsonNodeFactory.instance.objectNode().put("message", "Aborted by shutdown"));
                 }
-                Thread.sleep(500);
+                Thread.sleep(300);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
