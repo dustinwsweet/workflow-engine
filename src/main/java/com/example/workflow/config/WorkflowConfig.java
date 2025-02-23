@@ -2,7 +2,6 @@ package com.example.workflow.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import jakarta.annotation.PreDestroy;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,9 +13,17 @@ import org.slf4j.LoggerFactory;
 public class WorkflowConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(WorkflowConfig.class);
-    private final ExecutorService executorService = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors()
-    );
+    private final ExecutorService executorService;
+
+    // ✅ Default constructor for normal Spring use
+    public WorkflowConfig() {
+        this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    }
+
+    // ✅ Constructor for injecting mock ExecutorService (used in tests)
+    public WorkflowConfig(ExecutorService executorService) {
+        this.executorService = executorService;
+    }
 
     @Bean
     public ExecutorService executorService() {

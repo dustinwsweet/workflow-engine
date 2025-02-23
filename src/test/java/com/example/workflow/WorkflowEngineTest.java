@@ -97,6 +97,8 @@ public class WorkflowEngineTest {
         File workflowFile = new File("src/test/resources/parallel_workflow.json");
         workflow = parser.parseAsync(workflowFile).join();
 
+        workflowEngine.loadWorkflow(workflow);
+
         // Start workflow execution asynchronously
         CompletableFuture<Void> executionFuture = workflowEngine.executeWorkflowAsync();
 
@@ -123,6 +125,8 @@ public class WorkflowEngineTest {
 
         // Start workflow execution asynchronously
         CompletableFuture<Void> executionFuture = workflowEngine.executeWorkflowAsync();
+
+        workflowEngine.loadWorkflow(workflow);
 
         // Allow execution to begin before cancelling
         Thread.sleep(2000);

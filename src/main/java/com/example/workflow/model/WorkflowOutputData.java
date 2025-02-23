@@ -9,11 +9,11 @@ public class WorkflowOutputData {
 
     private String nodeId;
     private final Status status;
-    private final JsonNode output;
+    private final JsonNode data;
 
     public WorkflowOutputData(Status status, JsonNode output) {
         this.status = status;
-        this.output = output;
+        this.data = output;
     }
 
     public String getNodeId() {
@@ -28,8 +28,8 @@ public class WorkflowOutputData {
         return status;
     }
 
-    public JsonNode getOutput() {
-        return output;
+    public JsonNode getData() {
+        return data;
     }
 
     /**

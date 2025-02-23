@@ -32,7 +32,7 @@ public class WorkerTypeA extends BaseWorkflowNode {
         }
         logger.info("WorkerTypeA completed successfully.");
         return new WorkflowOutputData(WorkflowOutputData.Status.PASS,
-                JsonNodeFactory.instance.objectNode().put("result", "Data processed by WorkerTypeA"));
+                JsonNodeFactory.instance.objectNode().put("message", "Data processed by WorkerTypeA"));
     }
 
     @Override
