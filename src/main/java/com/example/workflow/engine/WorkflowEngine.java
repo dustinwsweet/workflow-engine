@@ -5,6 +5,7 @@ import com.example.workflow.model.WorkflowInputData;
 import com.example.workflow.model.WorkflowOutputData;
 import com.example.workflow.nodes.BaseWorkflowNode;
 import com.example.workflow.nodes.NodeRegistry;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +95,23 @@ public class WorkflowEngine {
                 break;
             }
             CompletableFuture<WorkflowOutputData> future = runNode(nodeDef);
-            future.join();
+            // Handle errors gracefully
+            future.handle((result, ex) -> {
+                if (ex != null) {
+                    String errorMessage = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+                    logger.error("Error executing node {}: {}", nodeDef.getId(), errorMessage);
+                    // Create a failure output data object for this node
+                    WorkflowOutputData failedOutput = new WorkflowOutputData(
+                            WorkflowOutputData.Status.FAIL,
+                            JsonNodeFactory.instance.objectNode().put("error", errorMessage)
+                    );
+                    failedOutput.setNodeId(nodeDef.getId());
+                    // Update the workflow state with the failure
+                    workflowManager.updateWorkflow(failedOutput);
+                    return failedOutput;
+                }
+                return result;
+            }).join();
         }
         logger.info("Sequential workflow execution completed.");
     }
@@ -106,11 +123,27 @@ public class WorkflowEngine {
             if (cancelRequested) {
                 break;
             }
-            futures.add(runNode(nodeDef));
+            CompletableFuture<WorkflowOutputData> future = runNode(nodeDef)
+                    .handle((result, ex) -> {
+                        if (ex != null) {
+                            String errorMessage = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+                            logger.error("Error executing node {}: {}", nodeDef.getId(), errorMessage);
+                            WorkflowOutputData failedOutput = new WorkflowOutputData(
+                                    WorkflowOutputData.Status.FAIL,
+                                    JsonNodeFactory.instance.objectNode().put("error", errorMessage)
+                            );
+                            failedOutput.setNodeId(nodeDef.getId());
+                            workflowManager.updateWorkflow(failedOutput);
+                            return failedOutput;
+                        }
+                        return result;
+                    });
+            futures.add(future);
         }
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         logger.info("Parallel workflow execution completed.");
     }
+
 
     /**
      * Helper method to run a node and register its CompletableFuture.
