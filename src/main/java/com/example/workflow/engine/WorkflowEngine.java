@@ -183,12 +183,11 @@ public class WorkflowEngine {
         logger.info("Shutdown requested for node: {}", nodeId);
         node.abort();
 
+        WorkflowOutputData outputData = null;
+
         if (future != null) {
             try {
-                WorkflowOutputData outputData = future.get(NODE_SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                workflowManager.updateWorkflow(outputData);
-                activeNodes.remove(node);
-                return outputData;
+                outputData = future.get(NODE_SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
                 logger.warn("Node {} did not shut down within {} ms. Canceling the future.", nodeId, NODE_SHUTDOWN_TIMEOUT_MS);
                 future.cancel(true);
@@ -202,15 +201,19 @@ public class WorkflowEngine {
             }
         }
 
+        if (outputData == null) {
+            outputData = new WorkflowOutputData(
+                    WorkflowOutputData.Status.ABORTED,
+                    JsonNodeFactory.instance.objectNode()
+                        .put("nodeId", nodeId)
+                        .put("message", "Node " + nodeId + " failed to shut down in time.")
+            );
+        }
+
+        workflowManager.updateWorkflow(outputData);
         activeNodes.remove(node);
-        WorkflowOutputData abortedData = new WorkflowOutputData(
-                WorkflowOutputData.Status.ABORTED,
-                new com.fasterxml.jackson.databind.node.ObjectNode(
-                        com.fasterxml.jackson.databind.node.JsonNodeFactory.instance
-                ).put("message", "Node " + nodeId + " failed to shut down in time.")
-        );
-        workflowManager.updateWorkflow(abortedData);
-        return abortedData;
+        return outputData;
     }
+
 
 }
