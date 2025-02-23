@@ -30,17 +30,20 @@ public class WorkflowParser {
     private final NodeRegistry nodeRegistry;
 
     /**
-     * Constructor that injects NodeRegistry.
+     * Constructor that injects both ObjectMapper and NodeRegistry.
+     *
+     * @param objectMapper The Jackson ObjectMapper (auto-configured by Spring Boot).
      * @param nodeRegistry The registry containing available workflow nodes.
      */
     @Autowired
-    public WorkflowParser(NodeRegistry nodeRegistry) {
-        this.objectMapper = new ObjectMapper();
+    public WorkflowParser(ObjectMapper objectMapper, NodeRegistry nodeRegistry) {
+        this.objectMapper = objectMapper;
         this.nodeRegistry = nodeRegistry;
     }
 
     /**
      * Parses a workflow definition from a JSON file.
+     *
      * @param file The JSON file containing the workflow definition.
      * @return A CompletableFuture containing the parsed Workflow object.
      */
@@ -60,6 +63,7 @@ public class WorkflowParser {
 
     /**
      * Parses a workflow definition from a JSON string.
+     *
      * @param json The JSON string containing the workflow definition.
      * @return A CompletableFuture containing the parsed Workflow object.
      */
@@ -79,6 +83,7 @@ public class WorkflowParser {
 
     /**
      * Parses a workflow definition from a Jackson JsonNode object.
+     *
      * @param jsonNode The JsonNode containing the workflow definition.
      * @return A CompletableFuture containing the parsed Workflow object.
      */
@@ -91,6 +96,7 @@ public class WorkflowParser {
 
     /**
      * Handles parsing and validation for all JSON sources.
+     *
      * @param jsonNode The JsonNode representing the workflow.
      * @return The validated Workflow object.
      */
@@ -108,6 +114,7 @@ public class WorkflowParser {
 
     /**
      * Validates the workflow structure, ensuring unique node IDs and valid types.
+     *
      * @param workflow The workflow to validate.
      */
     private void validateWorkflow(Workflow workflow) {
@@ -115,19 +122,14 @@ public class WorkflowParser {
         Set<String> duplicateIds = new HashSet<>();
 
         workflow.getWorkflow().getNodes().forEach(node -> {
-            // Check for missing nodeId
             if (node.getId() == null || node.getId().trim().isEmpty()) {
                 throw new CompletionException(
                         new IllegalArgumentException("Workflow contains a node with a missing nodeId.")
                 );
             }
-
-            // Check for duplicate nodeId
             if (!nodeIds.add(node.getId())) {
                 duplicateIds.add(node.getId());
             }
-
-            // Validate node type using NodeRegistry
             if (nodeRegistry.getNode(node.getType()) == null) {
                 throw new CompletionException(
                         new IllegalArgumentException("Invalid node type: " + node.getType())
@@ -137,23 +139,26 @@ public class WorkflowParser {
 
         if (!duplicateIds.isEmpty()) {
             throw new CompletionException(
-                    new IllegalArgumentException("Workflow contains duplicate nodeIds: " + duplicateIds.stream().collect(Collectors.joining(", ")))
+                    new IllegalArgumentException("Workflow contains duplicate nodeIds: " +
+                            duplicateIds.stream().collect(Collectors.joining(", ")))
             );
         }
     }
 
     /**
      * Serializes a Workflow object to a compact JSON string asynchronously.
+     *
      * @param workflow The Workflow object to serialize.
      * @return A CompletableFuture containing the JSON string.
      */
     public CompletableFuture<String> serializeAsync(Workflow workflow) {
-        return serializeAsync(workflow, false); // Default to compact JSON
+        return serializeAsync(workflow, false);
     }
 
     /**
      * Serializes a Workflow object to a JSON string asynchronously.
-     * @param workflow The Workflow object to serialize.
+     *
+     * @param workflow  The Workflow object to serialize.
      * @param formatted If true, the JSON will be formatted for readability.
      * @return A CompletableFuture containing the JSON string.
      */

@@ -2,6 +2,7 @@ package com.example.workflow.parser;
 
 import com.example.workflow.model.Workflow;
 import com.example.workflow.nodes.NodeRegistry;
+import com.example.workflow.nodes.WorkerTypeA;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,9 +30,16 @@ class WorkflowParserTest {
 
     @BeforeEach
     void setUp() {
-        nodeRegistry = new NodeRegistry();
-        parser = new WorkflowParser(nodeRegistry);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+
+        // Register any other implementations here
+        context.register(WorkerTypeA.class);
+        context.refresh();
+
+        nodeRegistry = new NodeRegistry(context);
         objectMapper = new ObjectMapper();
+        parser = new WorkflowParser(objectMapper, nodeRegistry);
+
     }
 
     private String readJsonFileAsString(String filePath) throws IOException {

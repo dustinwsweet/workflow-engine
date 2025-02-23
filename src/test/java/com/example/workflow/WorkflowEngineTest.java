@@ -4,17 +4,21 @@ import com.example.workflow.engine.WorkflowEngine;
 import com.example.workflow.engine.WorkflowManagerFactory;
 import com.example.workflow.model.Workflow;
 import com.example.workflow.nodes.NodeRegistry;
+import com.example.workflow.nodes.WorkerTypeA;
 import com.example.workflow.parser.WorkflowParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,9 +32,17 @@ public class WorkflowEngineTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        NodeRegistry nodeRegistry = new NodeRegistry();
-        parser = new WorkflowParser(nodeRegistry);
-        workflowEngine = new WorkflowEngine(nodeRegistry, new WorkflowManagerFactory());
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+
+        // Register any other implementations here
+        context.register(WorkerTypeA.class);
+        context.refresh();
+
+        NodeRegistry nodeRegistry = new NodeRegistry(context);
+        ObjectMapper objectMapper = new ObjectMapper();
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        parser = new WorkflowParser(objectMapper, nodeRegistry);
+        workflowEngine = new WorkflowEngine(nodeRegistry, new WorkflowManagerFactory(objectMapper), executorService);
 
         // Load workflow JSON
         File workflowFile = new File("src/test/resources/workflow.json");
